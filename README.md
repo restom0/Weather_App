@@ -104,7 +104,7 @@ to `master`. Scanner config lives in
 
 **One-time setup (required — this part needs your Sonar account):**
 
-1. Sign in at <https://sonarcloud.io> with GitHub and **import** the `restom0/Pizzahut` repo.
+1. Sign in at <https://sonarcloud.io> with GitHub and **import** the `restom0/Weather_App` repo.
 2. Note the **Organization key** and **Project key** and set them in
    `weather_app/sonar-project.properties` (`sonar.organization`, `sonar.projectKey`).
    These are already set to `restom0` / `Weather_App`.
