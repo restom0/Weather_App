@@ -62,8 +62,9 @@ jobs:
         with:
           # Directory that contains sonar-project.properties + the coverage report.
           projectBaseDir: weather_app
-          # Block the build when the SonarCloud Quality Gate fails.
-          args: -Dsonar.qualitygate.wait=true
+          # Don't wait for Quality Gate in CI; waiting can fail on transient
+          # SonarCloud API timeouts even when analysis upload succeeds.
+          args: -Dsonar.qualitygate.wait=false
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
