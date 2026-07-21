@@ -57,16 +57,41 @@ jobs:
           name: coverage
           path: weather_app/coverage
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v8
-        with:
-          # Directory that contains sonar-project.properties + the coverage report.
-          projectBaseDir: weather_app
-          # Block the build when the SonarCloud Quality Gate fails.
-          args: -Dsonar.qualitygate.wait=true
+      - name: Check SonarCloud credentials
+        id: creds
+        run: |
+          if [ -n "$SONAR_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::SONAR_TOKEN is not configured; skipping SonarCloud scan."
+          fi
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
+
+      - name: SonarCloud scan and quality gate
+        if: steps.creds.outputs.configured == 'true' && github.event_name != 'pull_request'
+        uses: SonarSource/sonarqube-scan-action@v8.2.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: weather_app
+          args: >
+            -Dsonar.branch.name=main
+            -Dsonar.qualitygate.wait=true
+
+      - name: SonarCloud pull request scan and quality gate
+        if: steps.creds.outputs.configured == 'true' && github.event_name == 'pull_request'
+        uses: SonarSource/sonarqube-scan-action@v8.2.1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          projectBaseDir: weather_app
+          args: >
+            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
+            -Dsonar.pullrequest.branch=${{ github.head_ref }}
+            -Dsonar.pullrequest.base=${{ github.base_ref }}
+            -Dsonar.qualitygate.wait=true
 
   # Production deploy: only for pushes to master, never for pull requests.
   deploy:
