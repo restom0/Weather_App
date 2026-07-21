@@ -3,7 +3,7 @@
 
 async function get(path, params) {
   const url = new URL(path, window.location.origin);
-  Object.entries(params || {}).forEach(([key, value]) => {
+  Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
       url.searchParams.set(key, value);
     }
@@ -18,7 +18,7 @@ async function get(path, params) {
   }
 
   if (!res.ok) {
-    const message = (data && data.error) || `Request failed (${res.status})`;
+    const message = data?.error || `Request failed (${res.status})`;
     const error = new Error(message);
     error.status = res.status;
     throw error;

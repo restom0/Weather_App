@@ -62,6 +62,8 @@ jobs:
         with:
           # Directory that contains sonar-project.properties + the coverage report.
           projectBaseDir: weather_app
+          # Block the build when the SonarCloud Quality Gate fails.
+          args: -Dsonar.qualitygate.wait=true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io

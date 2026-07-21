@@ -34,6 +34,7 @@ export default async function handler(req, res) {
     res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate=86400");
     return res.status(200).json(Array.isArray(data) ? data : []);
   } catch (err) {
+    console.error("Location search failed:", err);
     return res.status(500).json({ error: "Internal server error." });
   }
 }

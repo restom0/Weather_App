@@ -19,11 +19,7 @@ function getClientIp(req) {
   if (typeof forwarded === "string" && forwarded.length > 0) {
     return forwarded.split(",")[0].trim();
   }
-  return (
-    req.headers["x-real-ip"] ||
-    (req.socket && req.socket.remoteAddress) ||
-    "unknown"
-  );
+  return req.headers["x-real-ip"] || req.socket?.remoteAddress || "unknown";
 }
 
 function sweep(now) {

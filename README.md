@@ -108,9 +108,12 @@ npm run test:run    # single run
 npm run coverage    # single run + coverage report in coverage/
 ```
 
-Coverage is ~96% of lines. Tests cover the formatting/theming helpers, the API
-client, the serverless handlers (`/api/weather`, `/api/geocode`), the per-IP rate
-limiter, and the React components (search, weather view, geolocation flow).
+**Coverage is 100%** (statements, branches, functions and lines) across 104 tests,
+and `vitest.config.js` enforces a 100% threshold — the run fails if coverage
+regresses. Tests cover the formatting/theming helpers, the API client, the
+serverless handlers (`/api/weather`, `/api/geocode`), the per-IP rate limiter
+(including its bucket-sweep path), and the React components (search debounce and
+stale-response handling, weather rendering, geolocation flow, unit toggle).
 
 ## Code quality (SonarCloud)
 
@@ -118,6 +121,9 @@ A GitHub Actions workflow ([`.github/workflows/ci.yml`](.github/workflows/ci.yml
 runs the tests with coverage and pushes the results to SonarCloud on every push / PR
 to `master`. Scanner config lives in
 [`weather_app/sonar-project.properties`](weather_app/sonar-project.properties).
+
+The scan runs with `-Dsonar.qualitygate.wait=true`, so **a failing Quality Gate
+fails the build** rather than just reporting on the dashboard.
 
 **One-time setup (required — this part needs your Sonar account):**
 

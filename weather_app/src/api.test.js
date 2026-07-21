@@ -24,6 +24,26 @@ describe("api client", () => {
     expect(url.searchParams.get("units")).toBe("metric");
   });
 
+  it("uses metric units by default", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(okJson({}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getWeatherByCoords(1, 2);
+    const url = new URL(fetchMock.mock.calls[0][0]);
+    expect(url.searchParams.get("units")).toBe("metric");
+  });
+
+  it("omits empty, null and undefined query params", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(okJson({}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    // `units: ""` must be dropped rather than sent as an empty value.
+    await getWeatherByQuery("London", "");
+    const url = new URL(fetchMock.mock.calls[0][0]);
+    expect(url.searchParams.has("units")).toBe(false);
+    expect(url.searchParams.get("q")).toBe("London");
+  });
+
   it("getWeatherByQuery calls /api/weather with q", async () => {
     const fetchMock = vi.fn().mockResolvedValue(okJson({ name: "Tokyo" }));
     vi.stubGlobal("fetch", fetchMock);
@@ -48,6 +68,15 @@ describe("api client", () => {
     expect(url.searchParams.get("limit")).toBe("3");
   });
 
+  it("defaults the search limit to 5", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(okJson([]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await searchLocations("Paris");
+    const url = new URL(fetchMock.mock.calls[0][0]);
+    expect(url.searchParams.get("limit")).toBe("5");
+  });
+
   it("throws with the server-provided error message on non-ok responses", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: false,
@@ -59,7 +88,29 @@ describe("api client", () => {
     await expect(getWeatherByQuery("London")).rejects.toThrow("Too many requests");
   });
 
-  it("throws a generic message when the error body cannot be parsed", async () => {
+  it("attaches the HTTP status to the thrown error", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      json: async () => ({ error: "Too many requests" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getWeatherByQuery("London")).rejects.toMatchObject({ status: 429 });
+  });
+
+  it("falls back to a generic message when the body has no error field", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 503,
+      json: async () => ({ somethingElse: true }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(searchLocations("x")).rejects.toThrow(/Request failed \(503\)/);
+  });
+
+  it("falls back to a generic message when the body cannot be parsed", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: false,
       status: 500,

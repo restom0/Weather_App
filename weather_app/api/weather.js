@@ -37,11 +37,12 @@ export default async function handler(req, res) {
     if (!ok) {
       return res
         .status(status || 502)
-        .json({ error: (data && data.message) || "Weather lookup failed." });
+        .json({ error: data?.message || "Weather lookup failed." });
     }
     res.setHeader("Cache-Control", "s-maxage=300, stale-while-revalidate=600");
     return res.status(200).json(data);
   } catch (err) {
+    console.error("Weather lookup failed:", err);
     return res.status(500).json({ error: "Internal server error." });
   }
 }

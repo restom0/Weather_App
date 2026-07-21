@@ -27,7 +27,7 @@ export default function App() {
     []
   );
 
-  const useMyLocation = useCallback(() => {
+  const requestMyLocation = useCallback(() => {
     if (!("geolocation" in navigator)) {
       setStatus("idle");
       setError("Geolocation isn't supported by your browser. Search for a city instead.");
@@ -51,7 +51,7 @@ export default function App() {
 
   // Try to show the current location's weather on first load.
   useEffect(() => {
-    useMyLocation();
+    requestMyLocation();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -63,7 +63,7 @@ export default function App() {
     if (nextUnits === units) return;
     setUnits(nextUnits);
     localStorage.setItem("units", nextUnits);
-    if (weather && weather.coord) {
+    if (weather?.coord) {
       loadByCoords(weather.coord.lat, weather.coord.lon, nextUnits);
     }
   }
@@ -84,7 +84,7 @@ export default function App() {
           </div>
           <button
             type="button"
-            onClick={useMyLocation}
+            onClick={requestMyLocation}
             title="Use my location"
             aria-label="Use my location"
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/25 transition hover:bg-white/25"
@@ -96,7 +96,7 @@ export default function App() {
         <main className="flex-1">
           {status === "locating" && <StatusCard>Finding your location…</StatusCard>}
           {status === "loading" && <SkeletonCard />}
-          {status === "error" && <ErrorCard message={error} onRetry={useMyLocation} />}
+          {status === "error" && <ErrorCard message={error} onRetry={requestMyLocation} />}
           {status === "idle" && <EmptyState message={error} />}
           {status === "ready" && weather && <WeatherView weather={weather} units={units} />}
         </main>
@@ -173,13 +173,13 @@ function SkeletonCard() {
   );
 }
 
+// `message` always explains why we fell back to the empty state (permission
+// denied, unsupported browser, …), so it is rendered as-is.
 function EmptyState({ message }) {
   return (
     <Panel>
       <p className="text-lg font-medium text-white">Search for a city to get started</p>
-      <p className="mt-2 text-sm text-white/70">
-        {message || "Or tap the location button to use your current position."}
-      </p>
+      <p className="mt-2 text-sm text-white/70">{message}</p>
     </Panel>
   );
 }

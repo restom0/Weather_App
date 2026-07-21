@@ -22,6 +22,13 @@ export default defineConfig({
         "src/test/**",
         "**/*.test.{js,jsx}",
       ],
+      // Fail the run if coverage regresses below full coverage.
+      thresholds: {
+        statements: 100,
+        branches: 100,
+        functions: 100,
+        lines: 100,
+      },
     },
   },
 });

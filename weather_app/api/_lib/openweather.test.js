@@ -38,6 +38,7 @@ describe("openWeather", () => {
       units: "metric",
       empty: "",
       nothing: null,
+      missing: undefined,
     });
 
     expect(result).toEqual({ ok: true, status: 200, data: { hello: "world" } });
@@ -47,9 +48,24 @@ describe("openWeather", () => {
     expect(url.searchParams.get("lat")).toBe("1");
     expect(url.searchParams.get("units")).toBe("metric");
     expect(url.searchParams.get("appid")).toBe("test-key");
-    // empty / null params are filtered out
+    // empty / null / undefined params are filtered out
     expect(url.searchParams.has("empty")).toBe(false);
     expect(url.searchParams.has("nothing")).toBe(false);
+    expect(url.searchParams.has("missing")).toBe(false);
+  });
+
+  it("works with no params at all", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({}),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await openWeather("/geo/1.0/direct");
+    expect(result.ok).toBe(true);
+    const url = new URL(fetchMock.mock.calls[0][0]);
+    expect(url.searchParams.get("appid")).toBe("test-key");
   });
 
   it("returns data: null when the response body is not valid JSON", async () => {

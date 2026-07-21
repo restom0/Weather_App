@@ -9,7 +9,7 @@ import {
 } from "../lib/format";
 
 export default function WeatherView({ weather, units }) {
-  const condition = (weather.weather && weather.weather[0]) || {};
+  const condition = weather.weather?.[0] || {};
   const main = weather.main || {};
   const label = placeLabel(weather);
   const tz = weather.timezone || 0;
@@ -20,7 +20,7 @@ export default function WeatherView({ weather, units }) {
     { label: "Humidity", value: main.humidity != null ? `${main.humidity}%` : "--" },
     {
       label: "Wind",
-      value: `${windValue(weather.wind && weather.wind.speed, units)} ${windLabel(units)}`,
+      value: `${windValue(weather.wind?.speed, units)} ${windLabel(units)}`,
     },
     { label: "Pressure", value: main.pressure != null ? `${main.pressure} hPa` : "--" },
     {
@@ -29,7 +29,7 @@ export default function WeatherView({ weather, units }) {
     },
     {
       label: "Cloudiness",
-      value: weather.clouds && weather.clouds.all != null ? `${weather.clouds.all}%` : "--",
+      value: weather.clouds?.all != null ? `${weather.clouds.all}%` : "--",
     },
   ];
 
@@ -64,8 +64,8 @@ export default function WeatherView({ weather, units }) {
         </div>
 
         <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm text-white/80">
-          <span>🌅 {formatLocalTime(weather.sys && weather.sys.sunrise, tz)}</span>
-          <span>🌇 {formatLocalTime(weather.sys && weather.sys.sunset, tz)}</span>
+          <span>🌅 {formatLocalTime(weather.sys?.sunrise, tz)}</span>
+          <span>🌇 {formatLocalTime(weather.sys?.sunset, tz)}</span>
         </div>
       </section>
 

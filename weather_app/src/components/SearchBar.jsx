@@ -8,6 +8,9 @@ export default function SearchBar({ onSelect }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // True once a search for the current query has completed, so the dropdown can
+  // show the matches, an error, or an explicit "no matches" message.
+  const [searched, setSearched] = useState(false);
   const boxRef = useRef(null);
 
   // Debounced search as the user types.
@@ -17,6 +20,7 @@ export default function SearchBar({ onSelect }) {
       setResults([]);
       setError("");
       setLoading(false);
+      setSearched(false);
       return;
     }
     let active = true;
@@ -26,15 +30,17 @@ export default function SearchBar({ onSelect }) {
         const data = await searchLocations(q);
         if (!active) return;
         setResults(data || []);
-        setOpen(true);
         setError("");
       } catch (err) {
         if (!active) return;
         setError(err.message || "Search failed");
         setResults([]);
-        setOpen(true);
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+          setSearched(true);
+          setOpen(true);
+        }
       }
     }, 350);
     return () => {
@@ -57,6 +63,7 @@ export default function SearchBar({ onSelect }) {
   function choose(place) {
     setQuery("");
     setResults([]);
+    setSearched(false);
     setOpen(false);
     onSelect(place);
   }
@@ -69,7 +76,7 @@ export default function SearchBar({ onSelect }) {
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          onFocus={() => (results.length || error) && setOpen(true)}
+          onFocus={() => searched && setOpen(true)}
           placeholder="Search for a city…"
           aria-label="Search for a city"
           className="w-full bg-transparent text-white placeholder-white/60 outline-none"
@@ -77,7 +84,7 @@ export default function SearchBar({ onSelect }) {
         {loading && <Spinner />}
       </div>
 
-      {open && (results.length > 0 || error) && (
+      {open && searched && (
         <ul className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl bg-slate-900/90 shadow-2xl ring-1 ring-white/15 backdrop-blur">
           {error && <li className="px-4 py-3 text-sm text-red-300">{error}</li>}
           {!error && results.length === 0 && (

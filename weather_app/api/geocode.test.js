@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("./_lib/rateLimit.js", () => ({ rateLimit: vi.fn(() => true) }));
 vi.mock("./_lib/openweather.js", () => ({ openWeather: vi.fn() }));
@@ -33,11 +33,16 @@ beforeEach(() => {
   rateLimit.mockReturnValue(true);
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("GET /api/geocode", () => {
   it("returns 405 for non-GET methods", async () => {
     const res = makeRes();
     await handler(req("POST", { q: "London" }), res);
     expect(res.statusCode).toBe(405);
+    expect(res.headers.Allow).toBe("GET");
   });
 
   it("returns 429 when rate limited", async () => {
@@ -45,6 +50,7 @@ describe("GET /api/geocode", () => {
     const res = makeRes();
     await handler(req("GET", { q: "London" }), res);
     expect(res.statusCode).toBe(429);
+    expect(openWeather).not.toHaveBeenCalled();
   });
 
   it("returns 400 when q is missing or blank", async () => {
@@ -66,6 +72,19 @@ describe("GET /api/geocode", () => {
     expect(openWeather).toHaveBeenCalledWith("/geo/1.0/direct", { q: "Paris", limit: 5 });
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual(results);
+    expect(res.headers["Cache-Control"]).toContain("s-maxage=3600");
+  });
+
+  it("uses the default limit of 5 when none is given", async () => {
+    openWeather.mockResolvedValue({ ok: true, status: 200, data: [] });
+    await handler(req("GET", { q: "Paris" }), makeRes());
+    expect(openWeather).toHaveBeenCalledWith("/geo/1.0/direct", { q: "Paris", limit: 5 });
+  });
+
+  it("falls back to a limit of 5 when the limit is not a number", async () => {
+    openWeather.mockResolvedValue({ ok: true, status: 200, data: [] });
+    await handler(req("GET", { q: "Paris", limit: "abc" }), makeRes());
+    expect(openWeather).toHaveBeenCalledWith("/geo/1.0/direct", { q: "Paris", limit: 5 });
   });
 
   it("returns an empty array when upstream data is not an array", async () => {
@@ -80,12 +99,23 @@ describe("GET /api/geocode", () => {
     const res = makeRes();
     await handler(req("GET", { q: "Paris" }), res);
     expect(res.statusCode).toBe(401);
+    expect(res.body).toEqual({ error: "Location search failed." });
   });
 
-  it("returns 500 when the upstream call throws", async () => {
+  it("defaults to 502 when the upstream failure has no status", async () => {
+    openWeather.mockResolvedValue({ ok: false, status: undefined, data: null });
+    const res = makeRes();
+    await handler(req("GET", { q: "Paris" }), res);
+    expect(res.statusCode).toBe(502);
+  });
+
+  it("returns 500 and logs when the upstream call throws", async () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
     openWeather.mockRejectedValue(new Error("boom"));
     const res = makeRes();
     await handler(req("GET", { q: "Paris" }), res);
+
     expect(res.statusCode).toBe(500);
+    expect(logged).toHaveBeenCalled();
   });
 });

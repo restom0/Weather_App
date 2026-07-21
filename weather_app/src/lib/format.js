@@ -1,12 +1,17 @@
 // Display helpers for weather data.
+//
+// The formatters always return a string so callers get a consistent type,
+// falling back to "--" when a value is missing.
+
+const PLACEHOLDER = "--";
 
 export function unitSymbol(units) {
   return units === "imperial" ? "°F" : "°C";
 }
 
 export function formatTemp(value) {
-  if (value === undefined || value === null || Number.isNaN(value)) return "--";
-  return Math.round(value);
+  if (value === undefined || value === null || Number.isNaN(value)) return PLACEHOLDER;
+  return String(Math.round(value));
 }
 
 export function windLabel(units) {
@@ -14,10 +19,10 @@ export function windLabel(units) {
 }
 
 export function windValue(speed, units) {
-  if (speed === undefined || speed === null) return "--";
+  if (speed === undefined || speed === null) return PLACEHOLDER;
   // OpenWeather returns m/s for metric and mph for imperial.
-  if (units === "imperial") return Math.round(speed);
-  return Math.round(speed * 3.6); // m/s -> km/h
+  if (units === "imperial") return String(Math.round(speed));
+  return String(Math.round(speed * 3.6)); // m/s -> km/h
 }
 
 export function iconUrl(icon, size = "@2x") {
@@ -28,8 +33,9 @@ export function iconUrl(icon, size = "@2x") {
 // Renders a UNIX timestamp in the observed location's local time. OpenWeather
 // gives timestamps in UTC plus a `timezone` offset (seconds) for the location.
 export function formatLocalTime(unixSeconds, timezoneOffsetSeconds) {
-  if (unixSeconds === undefined || unixSeconds === null) return "--";
-  const date = new Date((unixSeconds + (timezoneOffsetSeconds || 0)) * 1000);
+  if (unixSeconds === undefined || unixSeconds === null) return PLACEHOLDER;
+  const offset = timezoneOffsetSeconds ?? 0;
+  const date = new Date((unixSeconds + offset) * 1000);
   return date.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -41,7 +47,7 @@ export function formatLocalTime(unixSeconds, timezoneOffsetSeconds) {
 export function placeLabel(weather) {
   if (!weather) return "";
   const name = weather.name || "";
-  const country = weather.sys && weather.sys.country ? weather.sys.country : "";
+  const country = weather.sys?.country || "";
   return [name, country].filter(Boolean).join(", ");
 }
 
@@ -65,7 +71,7 @@ const THEMES = {
 };
 
 export function themeFor(weather) {
-  const condition = weather && weather.weather && weather.weather[0];
+  const condition = weather?.weather?.[0];
   if (!condition) return THEMES.default;
   const isNight = (condition.icon || "").endsWith("n");
   switch (condition.main) {

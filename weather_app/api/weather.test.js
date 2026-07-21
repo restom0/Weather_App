@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("./_lib/rateLimit.js", () => ({ rateLimit: vi.fn(() => true) }));
 vi.mock("./_lib/openweather.js", () => ({ openWeather: vi.fn() }));
@@ -33,11 +33,16 @@ beforeEach(() => {
   rateLimit.mockReturnValue(true);
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("GET /api/weather", () => {
   it("returns 405 for non-GET methods", async () => {
     const res = makeRes();
     await handler(req("POST", {}), res);
     expect(res.statusCode).toBe(405);
+    expect(res.headers.Allow).toBe("GET");
   });
 
   it("returns 429 when rate limited", async () => {
@@ -54,6 +59,13 @@ describe("GET /api/weather", () => {
     expect(res.statusCode).toBe(400);
   });
 
+  it("returns 400 when only one coordinate is provided", async () => {
+    const res = makeRes();
+    await handler(req("GET", { lat: "51.5" }), res);
+    expect(res.statusCode).toBe(400);
+    expect(openWeather).not.toHaveBeenCalled();
+  });
+
   it("fetches weather by coordinates (default metric units)", async () => {
     openWeather.mockResolvedValue({ ok: true, status: 200, data: { name: "London" } });
     const res = makeRes();
@@ -66,6 +78,7 @@ describe("GET /api/weather", () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({ name: "London" });
+    expect(res.headers["Cache-Control"]).toContain("s-maxage=300");
   });
 
   it("fetches weather by city query with the requested units", async () => {
@@ -93,10 +106,23 @@ describe("GET /api/weather", () => {
     expect(res.body).toEqual({ error: "city not found" });
   });
 
-  it("returns 500 when the upstream call throws", async () => {
+  it("defaults to 502 with a generic message when the upstream gives neither", async () => {
+    openWeather.mockResolvedValue({ ok: false, status: undefined, data: null });
+    const res = makeRes();
+    await handler(req("GET", { q: "London" }), res);
+
+    expect(res.statusCode).toBe(502);
+    expect(res.body).toEqual({ error: "Weather lookup failed." });
+  });
+
+  it("returns 500 and logs when the upstream call throws", async () => {
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
     openWeather.mockRejectedValue(new Error("network down"));
     const res = makeRes();
     await handler(req("GET", { q: "London" }), res);
+
     expect(res.statusCode).toBe(500);
+    expect(res.body).toEqual({ error: "Internal server error." });
+    expect(logged).toHaveBeenCalled();
   });
 });
