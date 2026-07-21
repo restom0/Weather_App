@@ -1,5 +1,7 @@
 # Weather App
 
+[![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=restom0_Weather_App&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=restom0_Weather_App)
+
 ### 🔗 Live demo: **https://pizzahuttest.vercel.app**
 
 A React weather app that shows the weather for your **current location** and lets you
@@ -156,7 +158,7 @@ fails the build** rather than just reporting on the dashboard.
 1. Sign in at <https://sonarcloud.io> with GitHub and **import** the `restom0/Weather_App` repo.
 2. Note the **Organization key** and **Project key** and set them in
    `weather_app/sonar-project.properties` (`sonar.organization`, `sonar.projectKey`).
-   These are already set to `restom0` / `Weather_App`.
+   These are already set to `restom0` / `restom0_Weather_App`.
 3. In the SonarCloud project, go to **Administration → Analysis Method** and turn
    **OFF "Automatic Analysis"** — CI-based analysis and Automatic Analysis cannot both run.
 4. Create a token under **My Account → Security**, then add it to GitHub as a repo

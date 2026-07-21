@@ -77,7 +77,7 @@ jobs:
         with:
           projectBaseDir: weather_app
           args: >
-            -Dsonar.branch.name=main
+            -Dsonar.branch.name=master
             -Dsonar.qualitygate.wait=true
 
       - name: SonarCloud pull request scan and quality gate
