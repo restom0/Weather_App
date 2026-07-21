@@ -107,7 +107,7 @@ to `master`. Scanner config lives in
 1. Sign in at <https://sonarcloud.io> with GitHub and **import** the `restom0/Pizzahut` repo.
 2. Note the **Organization key** and **Project key** and set them in
    `weather_app/sonar-project.properties` (`sonar.organization`, `sonar.projectKey`).
-   The committed defaults assume `restom0` / `restom0_Pizzahut`.
+   These are already set to `restom0` / `Weather_App`.
 3. In the SonarCloud project, go to **Administration → Analysis Method** and turn
    **OFF "Automatic Analysis"** — CI-based analysis and Automatic Analysis cannot both run.
 4. Create a token under **My Account → Security**, then add it to GitHub as a repo
