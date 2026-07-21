@@ -1,9 +1,12 @@
-import withMT from "@material-tailwind/react/utils/withMT";
 /** @type {import('tailwindcss').Config} */
-export default withMT({
-  content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
+export default {
+  content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["Inter", "system-ui", "Avenir", "Helvetica", "Arial", "sans-serif"],
+      },
+    },
   },
   plugins: [],
-});
+};
