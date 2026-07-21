@@ -74,6 +74,10 @@ describe("formatLocalTime", () => {
     // 1700000000 = 2023-11-14T22:13:20Z -> +3600s offset => 23:13 local
     expect(formatLocalTime(1700000000, 3600)).toBe("11:13 PM");
   });
+  it("formats using the requested locale", () => {
+    // German uses a 24-hour clock, English a 12-hour one.
+    expect(formatLocalTime(1700000000, 3600, "de")).toBe("23:13");
+  });
   it("treats a missing offset as UTC", () => {
     expect(formatLocalTime(1700000000)).toBe("10:13 PM");
     expect(formatLocalTime(1700000000, null)).toBe("10:13 PM");

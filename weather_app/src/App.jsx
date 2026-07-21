@@ -1,26 +1,36 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import SearchBar from "./components/SearchBar";
 import WeatherView from "./components/WeatherView";
 import { getWeatherByCoords } from "./api";
 import { themeFor } from "./lib/format";
+import { useI18n } from "./i18n";
 
 export default function App() {
+  const { t, language, languages, setLanguage } = useI18n();
   const [units, setUnits] = useState(() => localStorage.getItem("units") || "metric");
   const [weather, setWeather] = useState(null);
   // status: locating | loading | ready | error | idle
   const [status, setStatus] = useState("locating");
-  const [error, setError] = useState("");
+  // Errors are held as a translation key (for messages we own) or as raw text
+  // (for messages the API returned), so they re-translate when the language
+  // changes instead of freezing the wording chosen when the error occurred.
+  const [error, setError] = useState(null);
+
+  const errorMessage = useMemo(() => {
+    if (!error) return "";
+    return error.key ? t(error.key) : error.text;
+  }, [error, t]);
 
   const loadByCoords = useCallback(
-    async (lat, lon, activeUnits) => {
+    async (lat, lon, activeUnits, activeLanguage) => {
       setStatus("loading");
-      setError("");
+      setError(null);
       try {
-        const data = await getWeatherByCoords(lat, lon, activeUnits);
+        const data = await getWeatherByCoords(lat, lon, activeUnits, activeLanguage);
         setWeather(data);
         setStatus("ready");
       } catch (err) {
-        setError(err.message || "Could not load weather.");
+        setError(err.message ? { text: err.message } : { key: "couldNotLoad" });
         setStatus("error");
       }
     },
@@ -30,24 +40,25 @@ export default function App() {
   const requestMyLocation = useCallback(() => {
     if (!("geolocation" in navigator)) {
       setStatus("idle");
-      setError("Geolocation isn't supported by your browser. Search for a city instead.");
+      setError({ key: "geolocationUnsupported" });
       return;
     }
     setStatus("locating");
-    setError("");
+    setError(null);
     navigator.geolocation.getCurrentPosition(
-      (pos) => loadByCoords(pos.coords.latitude, pos.coords.longitude, units),
+      (pos) => loadByCoords(pos.coords.latitude, pos.coords.longitude, units, language),
       (geoErr) => {
         setStatus("idle");
-        setError(
-          geoErr.code === geoErr.PERMISSION_DENIED
-            ? "Location access denied. Search for a city to see its weather."
-            : "Couldn't determine your location. Search for a city instead."
-        );
+        setError({
+          key:
+            geoErr.code === geoErr.PERMISSION_DENIED
+              ? "locationDenied"
+              : "locationUnavailable",
+        });
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 10 * 60 * 1000 }
     );
-  }, [loadByCoords, units]);
+  }, [loadByCoords, units, language]);
 
   // Try to show the current location's weather on first load.
   useEffect(() => {
@@ -56,7 +67,7 @@ export default function App() {
   }, []);
 
   function handleSelectLocation(place) {
-    loadByCoords(place.lat, place.lon, units);
+    loadByCoords(place.lat, place.lon, units, language);
   }
 
   function changeUnits(nextUnits) {
@@ -64,7 +75,16 @@ export default function App() {
     setUnits(nextUnits);
     localStorage.setItem("units", nextUnits);
     if (weather?.coord) {
-      loadByCoords(weather.coord.lat, weather.coord.lon, nextUnits);
+      loadByCoords(weather.coord.lat, weather.coord.lon, nextUnits, language);
+    }
+  }
+
+  // Refetch so the weather description comes back in the new language too.
+  function changeLanguage(nextLanguage) {
+    if (nextLanguage === language) return;
+    setLanguage(nextLanguage);
+    if (weather?.coord) {
+      loadByCoords(weather.coord.lat, weather.coord.lon, units, nextLanguage);
     }
   }
 
@@ -73,9 +93,19 @@ export default function App() {
   return (
     <div className={`min-h-screen w-full bg-gradient-to-br ${theme} transition-colors duration-700`}>
       <div className="mx-auto flex min-h-screen max-w-xl flex-col gap-5 px-4 py-8 sm:py-12">
-        <header className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold tracking-tight text-white">⛅ Weather</h1>
-          <UnitToggle units={units} onChange={changeUnits} />
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-xl font-semibold tracking-tight text-white">
+            ⛅ {t("appTitle")}
+          </h1>
+          <div className="flex items-center gap-2">
+            <LanguageSelect
+              language={language}
+              languages={languages}
+              label={t("language")}
+              onChange={changeLanguage}
+            />
+            <UnitToggle units={units} onChange={changeUnits} />
+          </div>
         </header>
 
         <div className="flex items-center gap-2">
@@ -85,8 +115,8 @@ export default function App() {
           <button
             type="button"
             onClick={requestMyLocation}
-            title="Use my location"
-            aria-label="Use my location"
+            title={t("useMyLocation")}
+            aria-label={t("useMyLocation")}
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white ring-1 ring-white/25 transition hover:bg-white/25"
           >
             <LocationIcon />
@@ -94,15 +124,22 @@ export default function App() {
         </div>
 
         <main className="flex-1">
-          {status === "locating" && <StatusCard>Finding your location…</StatusCard>}
+          {status === "locating" && <StatusCard>{t("findingLocation")}</StatusCard>}
           {status === "loading" && <SkeletonCard />}
-          {status === "error" && <ErrorCard message={error} onRetry={requestMyLocation} />}
-          {status === "idle" && <EmptyState message={error} />}
+          {status === "error" && (
+            <ErrorCard
+              title={t("errorTitle")}
+              retryLabel={t("tryAgain")}
+              message={errorMessage}
+              onRetry={requestMyLocation}
+            />
+          )}
+          {status === "idle" && <EmptyState title={t("emptyTitle")} message={errorMessage} />}
           {status === "ready" && weather && <WeatherView weather={weather} units={units} />}
         </main>
 
         <footer className="text-center text-xs text-white/60">
-          Data by{" "}
+          {t("dataBy")}{" "}
           <a
             className="underline hover:text-white/80"
             href="https://openweathermap.org/"
@@ -114,6 +151,24 @@ export default function App() {
         </footer>
       </div>
     </div>
+  );
+}
+
+function LanguageSelect({ language, languages, label, onChange }) {
+  return (
+    <select
+      value={language}
+      onChange={(event) => onChange(event.target.value)}
+      aria-label={label}
+      title={label}
+      className="rounded-full bg-white/15 px-3 py-1.5 text-sm text-white outline-none ring-1 ring-white/20 [&>option]:text-slate-900"
+    >
+      {languages.map((item) => (
+        <option key={item.code} value={item.code}>
+          {item.label}
+        </option>
+      ))}
+    </select>
   );
 }
 
@@ -175,26 +230,26 @@ function SkeletonCard() {
 
 // `message` always explains why we fell back to the empty state (permission
 // denied, unsupported browser, …), so it is rendered as-is.
-function EmptyState({ message }) {
+function EmptyState({ title, message }) {
   return (
     <Panel>
-      <p className="text-lg font-medium text-white">Search for a city to get started</p>
+      <p className="text-lg font-medium text-white">{title}</p>
       <p className="mt-2 text-sm text-white/70">{message}</p>
     </Panel>
   );
 }
 
-function ErrorCard({ message, onRetry }) {
+function ErrorCard({ title, message, retryLabel, onRetry }) {
   return (
     <Panel>
-      <p className="text-lg font-medium text-white">Something went wrong</p>
+      <p className="text-lg font-medium text-white">{title}</p>
       <p className="mt-2 text-sm text-white/70">{message}</p>
       <button
         type="button"
         onClick={onRetry}
         className="mt-4 rounded-full bg-white/20 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/25 transition hover:bg-white/30"
       >
-        Try again
+        {retryLabel}
       </button>
     </Panel>
   );

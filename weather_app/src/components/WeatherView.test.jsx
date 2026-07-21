@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithI18n } from "../test/utils";
 import WeatherView from "./WeatherView";
 
 const sample = {
@@ -22,7 +23,7 @@ const sample = {
 
 describe("WeatherView", () => {
   it("renders place, condition and metric values", () => {
-    render(<WeatherView weather={sample} units="metric" />);
+    renderWithI18n(<WeatherView weather={sample} units="metric" />);
 
     expect(screen.getByRole("heading", { name: "London, GB" })).toBeInTheDocument();
     expect(screen.getByText("scattered clouds")).toBeInTheDocument();
@@ -37,14 +38,21 @@ describe("WeatherView", () => {
     expect(icon).toHaveAttribute("src", expect.stringContaining("03d"));
   });
 
+  it("renders its labels in the selected language", () => {
+    renderWithI18n(<WeatherView weather={sample} units="metric" />, { language: "de" });
+    expect(screen.getByText("Gefühlt")).toBeInTheDocument();
+    expect(screen.getByText("Luftfeuchtigkeit")).toBeInTheDocument();
+    expect(screen.getByText("Bewölkung")).toBeInTheDocument();
+  });
+
   it("renders imperial units", () => {
-    render(<WeatherView weather={sample} units="imperial" />);
+    renderWithI18n(<WeatherView weather={sample} units="imperial" />);
     expect(screen.getByText("17°F")).toBeInTheDocument();
     expect(screen.getByText("3 mph")).toBeInTheDocument(); // imperial passes through
   });
 
   it("renders placeholders when the payload is missing fields", () => {
-    render(<WeatherView weather={{}} units="metric" />);
+    renderWithI18n(<WeatherView weather={{}} units="metric" />);
 
     // Temperature, feels-like, humidity, pressure, visibility and cloudiness
     // all fall back to the placeholder.
@@ -58,12 +66,12 @@ describe("WeatherView", () => {
   });
 
   it("uses generic alt text when the condition has an icon but no description", () => {
-    render(<WeatherView weather={{ weather: [{ icon: "01d" }] }} units="metric" />);
+    renderWithI18n(<WeatherView weather={{ weather: [{ icon: "01d" }] }} units="metric" />);
     expect(screen.getByAltText("weather")).toBeInTheDocument();
   });
 
   it("renders sunrise/sunset placeholders without a sys block", () => {
-    render(<WeatherView weather={{ main: { temp: 5 } }} units="metric" />);
+    renderWithI18n(<WeatherView weather={{ main: { temp: 5 } }} units="metric" />);
     expect(screen.getByText("🌅 --")).toBeInTheDocument();
     expect(screen.getByText("🌇 --")).toBeInTheDocument();
   });

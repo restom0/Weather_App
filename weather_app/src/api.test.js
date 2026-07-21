@@ -55,6 +55,17 @@ describe("api client", () => {
     expect(url.searchParams.get("units")).toBe("imperial");
   });
 
+  it("passes the language through so descriptions come back localised", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(okJson({}));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await getWeatherByCoords(1, 2, "metric", "vi");
+    expect(new URL(fetchMock.mock.calls[0][0]).searchParams.get("lang")).toBe("vi");
+
+    await getWeatherByQuery("Paris", "metric", "fr");
+    expect(new URL(fetchMock.mock.calls[1][0]).searchParams.get("lang")).toBe("fr");
+  });
+
   it("searchLocations calls /api/geocode with q/limit", async () => {
     const fetchMock = vi.fn().mockResolvedValue(okJson([{ name: "Paris" }]));
     vi.stubGlobal("fetch", fetchMock);

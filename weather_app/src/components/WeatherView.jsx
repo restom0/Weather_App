@@ -7,8 +7,10 @@ import {
   formatLocalTime,
   placeLabel,
 } from "../lib/format";
+import { useI18n } from "../i18n";
 
 export default function WeatherView({ weather, units }) {
+  const { t, language } = useI18n();
   const condition = weather.weather?.[0] || {};
   const main = weather.main || {};
   const label = placeLabel(weather);
@@ -16,19 +18,19 @@ export default function WeatherView({ weather, units }) {
   const symbol = unitSymbol(units);
 
   const highlights = [
-    { label: "Feels like", value: `${formatTemp(main.feels_like)}${symbol}` },
-    { label: "Humidity", value: main.humidity != null ? `${main.humidity}%` : "--" },
+    { label: t("feelsLike"), value: `${formatTemp(main.feels_like)}${symbol}` },
+    { label: t("humidity"), value: main.humidity != null ? `${main.humidity}%` : "--" },
     {
-      label: "Wind",
+      label: t("wind"),
       value: `${windValue(weather.wind?.speed, units)} ${windLabel(units)}`,
     },
-    { label: "Pressure", value: main.pressure != null ? `${main.pressure} hPa` : "--" },
+    { label: t("pressure"), value: main.pressure != null ? `${main.pressure} hPa` : "--" },
     {
-      label: "Visibility",
+      label: t("visibility"),
       value: weather.visibility != null ? `${(weather.visibility / 1000).toFixed(1)} km` : "--",
     },
     {
-      label: "Cloudiness",
+      label: t("cloudiness"),
       value: weather.clouds?.all != null ? `${weather.clouds.all}%` : "--",
     },
   ];
@@ -58,14 +60,14 @@ export default function WeatherView({ weather, units }) {
             {symbol}
           </span>
           <div className="mb-2 text-sm text-white/70">
-            <div>H: {formatTemp(main.temp_max)}{symbol}</div>
-            <div>L: {formatTemp(main.temp_min)}{symbol}</div>
+            <div>{t("high")}: {formatTemp(main.temp_max)}{symbol}</div>
+            <div>{t("low")}: {formatTemp(main.temp_min)}{symbol}</div>
           </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-sm text-white/80">
-          <span>🌅 {formatLocalTime(weather.sys?.sunrise, tz)}</span>
-          <span>🌇 {formatLocalTime(weather.sys?.sunset, tz)}</span>
+          <span>🌅 {formatLocalTime(weather.sys?.sunrise, tz, language)}</span>
+          <span>🌇 {formatLocalTime(weather.sys?.sunset, tz, language)}</span>
         </div>
       </section>
 

@@ -32,14 +32,14 @@ export function iconUrl(icon, size = "@2x") {
 
 // Renders a UNIX timestamp in the observed location's local time. OpenWeather
 // gives timestamps in UTC plus a `timezone` offset (seconds) for the location.
-export function formatLocalTime(unixSeconds, timezoneOffsetSeconds) {
+// The locale decides 12- vs 24-hour presentation, so no explicit hour12 here.
+export function formatLocalTime(unixSeconds, timezoneOffsetSeconds, locale = "en") {
   if (unixSeconds === undefined || unixSeconds === null) return PLACEHOLDER;
   const offset = timezoneOffsetSeconds ?? 0;
   const date = new Date((unixSeconds + offset) * 1000);
-  return date.toLocaleTimeString("en-US", {
+  return date.toLocaleTimeString(locale, {
     hour: "numeric",
     minute: "2-digit",
-    hour12: true,
     timeZone: "UTC",
   });
 }

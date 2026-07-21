@@ -93,6 +93,17 @@ describe("GET /api/weather", () => {
     expect(res.statusCode).toBe(200);
   });
 
+  it("forwards the language so OpenWeather localises the description", async () => {
+    openWeather.mockResolvedValue({ ok: true, status: 200, data: {} });
+    await handler(req("GET", { q: "Paris", lang: "fr" }), makeRes());
+
+    expect(openWeather).toHaveBeenCalledWith("/data/2.5/weather", {
+      q: "Paris",
+      units: "metric",
+      lang: "fr",
+    });
+  });
+
   it("propagates the upstream error status and message", async () => {
     openWeather.mockResolvedValue({
       ok: false,

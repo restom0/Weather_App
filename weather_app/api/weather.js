@@ -19,13 +19,13 @@ export default async function handler(req, res) {
       .json({ error: "Too many requests. Please slow down and try again shortly." });
   }
 
-  const { lat, lon, q, units = "metric" } = req.query;
+  const { lat, lon, q, units = "metric", lang } = req.query;
 
   let params;
   if (q) {
-    params = { q, units };
+    params = { q, units, lang };
   } else if (lat !== undefined && lon !== undefined) {
-    params = { lat, lon, units };
+    params = { lat, lon, units, lang };
   } else {
     return res
       .status(400)

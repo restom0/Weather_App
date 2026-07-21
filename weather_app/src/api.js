@@ -26,12 +26,13 @@ async function get(path, params) {
   return data;
 }
 
-export function getWeatherByCoords(lat, lon, units = "metric") {
-  return get("/api/weather", { lat, lon, units });
+// `lang` asks OpenWeather to localise the weather description itself.
+export function getWeatherByCoords(lat, lon, units = "metric", lang) {
+  return get("/api/weather", { lat, lon, units, lang });
 }
 
-export function getWeatherByQuery(q, units = "metric") {
-  return get("/api/weather", { q, units });
+export function getWeatherByQuery(q, units = "metric", lang) {
+  return get("/api/weather", { q, units, lang });
 }
 
 export function searchLocations(q, limit = 5) {

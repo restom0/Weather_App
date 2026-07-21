@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { searchLocations } from "../api";
 import { formatLocationOption } from "../lib/format";
+import { useI18n } from "../i18n";
 
 export default function SearchBar({ onSelect }) {
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [open, setOpen] = useState(false);
@@ -33,7 +35,7 @@ export default function SearchBar({ onSelect }) {
         setError("");
       } catch (err) {
         if (!active) return;
-        setError(err.message || "Search failed");
+        setError(err.message || t("searchFailed"));
         setResults([]);
       } finally {
         if (active) {
@@ -77,8 +79,8 @@ export default function SearchBar({ onSelect }) {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onFocus={() => searched && setOpen(true)}
-          placeholder="Search for a city…"
-          aria-label="Search for a city"
+          placeholder={t("searchPlaceholder")}
+          aria-label={t("searchLabel")}
           className="w-full bg-transparent text-white placeholder-white/60 outline-none"
         />
         {loading && <Spinner />}
@@ -88,7 +90,7 @@ export default function SearchBar({ onSelect }) {
         <ul className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl bg-slate-900/90 shadow-2xl ring-1 ring-white/15 backdrop-blur">
           {error && <li className="px-4 py-3 text-sm text-red-300">{error}</li>}
           {!error && results.length === 0 && (
-            <li className="px-4 py-3 text-sm text-white/60">No matches found.</li>
+            <li className="px-4 py-3 text-sm text-white/60">{t("noMatches")}</li>
           )}
           {results.map((place, index) => (
             <li key={`${place.lat},${place.lon},${index}`}>

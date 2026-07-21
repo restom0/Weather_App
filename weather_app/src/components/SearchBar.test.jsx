@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { screen, fireEvent, waitFor } from "@testing-library/react";
+import { renderWithI18n } from "../test/utils";
 
 vi.mock("../api", () => ({
   searchLocations: vi.fn(),
@@ -25,7 +26,7 @@ describe("SearchBar", () => {
   it("searches after typing, shows results, and calls onSelect on click", async () => {
     searchLocations.mockResolvedValue([PARIS]);
     const onSelect = vi.fn();
-    render(<SearchBar onSelect={onSelect} />);
+    renderWithI18n(<SearchBar onSelect={onSelect} />);
 
     type("Paris");
 
@@ -40,7 +41,7 @@ describe("SearchBar", () => {
   });
 
   it("does not search for queries shorter than 2 characters", async () => {
-    render(<SearchBar onSelect={() => {}} />);
+    renderWithI18n(<SearchBar onSelect={() => {}} />);
     type("P");
     await new Promise((resolve) => setTimeout(resolve, 400));
     expect(searchLocations).not.toHaveBeenCalled();
@@ -48,7 +49,7 @@ describe("SearchBar", () => {
 
   it("hides the dropdown again when the query is cleared", async () => {
     searchLocations.mockResolvedValue([PARIS]);
-    render(<SearchBar onSelect={() => {}} />);
+    renderWithI18n(<SearchBar onSelect={() => {}} />);
 
     type("Paris");
     await screen.findByText("Paris, Ile-de-France, FR");
@@ -61,35 +62,35 @@ describe("SearchBar", () => {
 
   it("shows 'no matches' when the search returns an empty list", async () => {
     searchLocations.mockResolvedValue([]);
-    render(<SearchBar onSelect={() => {}} />);
+    renderWithI18n(<SearchBar onSelect={() => {}} />);
     type("Atlantis");
     expect(await screen.findByText("No matches found.")).toBeInTheDocument();
   });
 
   it("treats a missing response body as no matches", async () => {
     searchLocations.mockResolvedValue(undefined);
-    render(<SearchBar onSelect={() => {}} />);
+    renderWithI18n(<SearchBar onSelect={() => {}} />);
     type("Atlantis");
     expect(await screen.findByText("No matches found.")).toBeInTheDocument();
   });
 
   it("shows the error message when the search fails", async () => {
     searchLocations.mockRejectedValue(new Error("Too many requests"));
-    render(<SearchBar onSelect={() => {}} />);
+    renderWithI18n(<SearchBar onSelect={() => {}} />);
     type("Paris");
     expect(await screen.findByText("Too many requests")).toBeInTheDocument();
   });
 
   it("falls back to a generic message for errors without one", async () => {
     searchLocations.mockRejectedValue(new Error());
-    render(<SearchBar onSelect={() => {}} />);
+    renderWithI18n(<SearchBar onSelect={() => {}} />);
     type("Paris");
     expect(await screen.findByText("Search failed")).toBeInTheDocument();
   });
 
   it("closes on an outside click and reopens on focus", async () => {
     searchLocations.mockResolvedValue([PARIS]);
-    render(<SearchBar onSelect={() => {}} />);
+    renderWithI18n(<SearchBar onSelect={() => {}} />);
 
     type("Paris");
     await screen.findByText("Paris, Ile-de-France, FR");
@@ -110,7 +111,7 @@ describe("SearchBar", () => {
         resolveStale = resolve;
       }))
       .mockResolvedValue([]);
-    render(<SearchBar onSelect={() => {}} />);
+    renderWithI18n(<SearchBar onSelect={() => {}} />);
 
     type("Paris");
     // Let the debounce fire so the first request is genuinely in flight.
@@ -131,7 +132,7 @@ describe("SearchBar", () => {
         rejectStale = reject;
       }))
       .mockResolvedValue([]);
-    render(<SearchBar onSelect={() => {}} />);
+    renderWithI18n(<SearchBar onSelect={() => {}} />);
 
     type("Paris");
     await waitFor(() => expect(searchLocations).toHaveBeenCalledTimes(1));
@@ -145,7 +146,7 @@ describe("SearchBar", () => {
 
   it("keeps the dropdown open when clicking inside it", async () => {
     searchLocations.mockResolvedValue([PARIS]);
-    render(<SearchBar onSelect={() => {}} />);
+    renderWithI18n(<SearchBar onSelect={() => {}} />);
 
     type("Paris");
     const option = await screen.findByText("Paris, Ile-de-France, FR");

@@ -11,6 +11,7 @@ Vercel serverless functions, which also enforce **per-IP rate limiting**.
 - 🌍 **Current-location weather** via the browser Geolocation API
 - 🔎 **City search** with autocomplete and disambiguation (state / country)
 - 📊 Temperature, "feels like", humidity, wind, pressure, visibility, cloudiness, sunrise/sunset
+- 🌍 **7 languages** — English, Español, Tiếng Việt, Français, Deutsch, Català, Italiano
 - 🌗 **°C / °F toggle**, remembered across visits
 - 🎨 Background that adapts to the current conditions (day/night, clear, clouds, rain, …)
 - 🔒 **API key never exposed to the browser** — every OpenWeather call goes through `/api`
@@ -96,6 +97,29 @@ vercel --prod                                 # production deploy
    serves `weather_app/api/*` as serverless functions. If you use this, delete the
    `deploy` job from the workflow to avoid double deploys.
 
+## Internationalisation
+
+The UI ships in **7 languages**: `en`, `es`, `vi`, `fr`, `de`, `ca`, `it`.
+
+- **UI strings** live in [`weather_app/src/i18n/translations.js`](weather_app/src/i18n/translations.js);
+  a tiny context + `useI18n()` hook in [`src/i18n/index.jsx`](weather_app/src/i18n/index.jsx)
+  provides `t(key)`. No i18n library — the whole thing adds ~2.7 kB gzipped.
+- **Weather descriptions are localised by OpenWeather itself**: the active language is
+  forwarded as the `lang` parameter through `/api/weather`, so "clear sky" comes back as
+  "cielo claro", "bầu trời quang đãng", "ciel dégagé", and so on.
+- **Times** are formatted with `toLocaleTimeString(locale)`, so German shows `23:13`
+  where English shows `11:13 PM`.
+- Language is picked from the stored preference, then the browser's `navigator.languages`,
+  then English. The choice persists in `localStorage` and updates `<html lang>`.
+- Errors are stored as translation *keys*, so an on-screen message re-translates when the
+  language changes rather than freezing in the language it occurred in. (Error text coming
+  from the upstream API is passed through as-is and stays in English.)
+
+To add a language: add an entry to `LANGUAGES` and a matching dictionary in
+`TRANSLATIONS`. A test asserts every language defines the full English key set, so a
+missing string fails the build. Use a code OpenWeather also supports to get localised
+descriptions for free.
+
 ## Testing
 
 Unit tests use [Vitest](https://vitest.dev/) + Testing Library, with V8 coverage
@@ -108,7 +132,7 @@ npm run test:run    # single run
 npm run coverage    # single run + coverage report in coverage/
 ```
 
-**Coverage is 100%** (statements, branches, functions and lines) across 104 tests,
+**Coverage is 100%** (statements, branches, functions and lines) across 136 tests,
 and `vitest.config.js` enforces a 100% threshold — the run fails if coverage
 regresses. Tests cover the formatting/theming helpers, the API client, the
 serverless handlers (`/api/weather`, `/api/geocode`), the per-IP rate limiter
