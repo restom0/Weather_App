@@ -60,17 +60,24 @@ middleware, so the full app (proxy + rate limiting) works without `vercel dev`.
 
 ## Deploy to Vercel
 
-### Option A — Git integration (recommended)
+### Option A — GitHub Actions (what this repo uses)
 
-1. Push this repo to GitHub.
-2. In Vercel: **Add New… → Project** and import the repo.
-3. Set **Root Directory** to `weather_app`.
-4. Add the environment variable `OPENWEATHER_API_KEY` (and optionally the rate-limit
-   ones) under **Project Settings → Environment Variables**.
-5. **Deploy.** Vercel auto-detects Vite (build `npm run build`, output `dist`) and
-   serves `weather_app/api/*` as serverless functions.
+Every push to `master` runs the tests and, only if they pass, deploys to production
+via the `deploy` job in [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+Pull requests never deploy.
 
-### Option B — Vercel CLI
+Add these repository secrets under **Settings → Secrets and variables → Actions**:
+
+| Secret              | Where to get it                                        |
+| ------------------- | ------------------------------------------------------ |
+| `VERCEL_TOKEN`      | <https://vercel.com/account/tokens> — create a token   |
+| `VERCEL_ORG_ID`     | `weather_app/.vercel/project.json` → `orgId`           |
+| `VERCEL_PROJECT_ID` | `weather_app/.vercel/project.json` → `projectId`       |
+
+> ⚠️ Don't also enable Vercel's Git integration (Option C) for this project — you'd
+> get two deployments per push. Use one or the other.
+
+### Option B — Vercel CLI (manual)
 
 ```bash
 cd weather_app
@@ -78,6 +85,16 @@ vercel link --yes                             # create/link the project
 echo "<your-key>" | vercel env add OPENWEATHER_API_KEY production
 vercel --prod                                 # production deploy
 ```
+
+### Option C — Vercel Git integration
+
+1. In Vercel: **Add New… → Project** and import the repo.
+2. Set **Root Directory** to `weather_app`.
+3. Add the environment variable `OPENWEATHER_API_KEY` (and optionally the rate-limit
+   ones) under **Project Settings → Environment Variables**.
+4. **Deploy.** Vercel auto-detects Vite (build `npm run build`, output `dist`) and
+   serves `weather_app/api/*` as serverless functions. If you use this, delete the
+   `deploy` job from the workflow to avoid double deploys.
 
 ## Testing
 
