@@ -7,16 +7,16 @@ on:
     branches: [master]
 
 jobs:
-  # ── Tests gate everything else ──────────────────────────────────────────────
+  # Tests gate everything else.
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -32,33 +32,33 @@ jobs:
 
       # Hand the LCOV report to the sonar job (jobs run on separate runners).
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: weather_app/coverage
           retention-days: 1
 
-  # ── Code quality. Runs independently so a Sonar outage/misconfig can't block
-  #    deploys. Add `sonar` to the deploy job's `needs` to make it a hard gate. ──
+  # Code quality. Runs independently so a Sonar outage/misconfig can't block
+  # deploys. Add `sonar` to the deploy job's `needs` to make it a hard gate.
   sonar:
     name: SonarCloud
     needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Sonar needs full history for accurate blame / new-code detection.
           fetch-depth: 0
 
       - name: Download coverage report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: coverage
           path: weather_app/coverage
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v6
+        uses: SonarSource/sonarqube-scan-action@v8
         with:
           # Directory that contains sonar-project.properties + the coverage report.
           projectBaseDir: weather_app
@@ -68,7 +68,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
 
-  # ── Production deploy: only for pushes to master, never for pull requests ───
+  # Production deploy: only for pushes to master, never for pull requests.
   deploy:
     name: Deploy to Vercel
     needs: test
@@ -82,12 +82,27 @@ jobs:
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
+
+      - name: Verify Vercel secrets
+        run: |
+          missing=0
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required GitHub Actions secret: $name"
+              missing=1
+            fi
+          done
+          exit "$missing"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
