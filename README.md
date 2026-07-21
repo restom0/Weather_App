@@ -1,8 +1,10 @@
 # Weather App
 
+### 🔗 Live demo: **https://pizzahuttest.vercel.app**
+
 A React weather app that shows the weather for your **current location** and lets you
-**search for any city** in the world. The OpenWeather API key stays server-side behind
-Vercel serverless functions, which also enforce **per-IP rate limiting**.
+**search for any city** in the world, in **7 languages**. The OpenWeather API key stays
+server-side behind Vercel serverless functions, which also enforce **per-IP rate limiting**.
 
 > The application lives in [`weather_app/`](./weather_app) — run all commands from there.
 

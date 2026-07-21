@@ -17,6 +17,12 @@ coverage
 # Vercel
 .vercel
 
+# SonarQube / SonarCloud scanner working directory
+.scannerwork/
+
+# Tool caches
+.eslintcache
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

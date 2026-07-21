@@ -1,7 +1,10 @@
 # Weather App
 
-React + Vite weather app with a Vercel serverless backend that proxies the OpenWeather
-API (keeping the API key server-side) and rate-limits requests to **100 per IP**.
+### 🔗 Live demo: **https://pizzahuttest.vercel.app**
+
+React + Vite weather app in 7 languages, with a Vercel serverless backend that proxies
+the OpenWeather API (keeping the API key server-side) and rate-limits requests to
+**100 per IP**.
 
 See the [repository README](../README.md) for the full overview. Quick start:
 

@@ -26,6 +26,12 @@ pnpm-debug.log*
 # Vercel
 .vercel/
 
+# SonarQube / SonarCloud scanner working directory
+.scannerwork/
+
+# Tool caches
+.eslintcache
+
 # OS & editor cruft
 .DS_Store
 Thumbs.db

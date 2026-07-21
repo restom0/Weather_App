@@ -2,6 +2,8 @@
   "name": "weather_app",
   "private": true,
   "version": "0.0.0",
+  "description": "Weather for your current location or any city you search, in 7 languages — React + Vite front end with rate-limited Vercel serverless functions proxying OpenWeather.",
+  "homepage": "https://pizzahuttest.vercel.app",
   "type": "module",
   "scripts": {
     "dev": "vite",
