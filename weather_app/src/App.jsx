@@ -26,7 +26,10 @@ export default function App() {
       setStatus("loading");
       setError(null);
       try {
-        const data = await getWeatherByCoords(lat, lon, activeUnits, activeLanguage);
+        const data = await getWeatherByCoords(lat, lon, {
+          units: activeUnits,
+          lang: activeLanguage,
+        });
         setWeather(data);
         setStatus("ready");
       } catch (err) {

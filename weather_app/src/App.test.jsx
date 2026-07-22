@@ -75,7 +75,7 @@ describe("App", () => {
     renderWithI18n(<App />);
 
     expect(await screen.findByRole("heading", { name: "Testville, US" })).toBeInTheDocument();
-    expect(getWeatherByCoords).toHaveBeenCalledWith(10, 20, "metric", "en");
+    expect(getWeatherByCoords).toHaveBeenCalledWith(10, 20, { units: "metric", lang: "en" });
   });
 
   it("honours a stored unit preference", async () => {
@@ -85,7 +85,7 @@ describe("App", () => {
     renderWithI18n(<App />);
 
     await screen.findByRole("heading", { name: "Testville, US" });
-    expect(getWeatherByCoords).toHaveBeenCalledWith(10, 20, "imperial", "en");
+    expect(getWeatherByCoords).toHaveBeenCalledWith(10, 20, { units: "imperial", lang: "en" });
   });
 
   it("shows an error card when the weather request fails, and retries", async () => {
@@ -117,7 +117,7 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: "°F" }));
 
     await waitFor(() =>
-      expect(getWeatherByCoords).toHaveBeenCalledWith(10, 20, "imperial", "en")
+      expect(getWeatherByCoords).toHaveBeenCalledWith(10, 20, { units: "imperial", lang: "en" })
     );
     expect(localStorage.getItem("units")).toBe("imperial");
   });
@@ -157,7 +157,7 @@ describe("App", () => {
     fireEvent.click(await screen.findByText("Paris, Ile-de-France, FR"));
 
     await waitFor(() =>
-      expect(getWeatherByCoords).toHaveBeenCalledWith(48.85, 2.35, "metric", "en")
+      expect(getWeatherByCoords).toHaveBeenCalledWith(48.85, 2.35, { units: "metric", lang: "en" })
     );
   });
 
@@ -170,7 +170,7 @@ describe("App", () => {
     fireEvent.change(screen.getByLabelText("Language"), { target: { value: "de" } });
 
     // The description is localised by OpenWeather, so the request is repeated.
-    await waitFor(() => expect(getWeatherByCoords).toHaveBeenCalledWith(10, 20, "metric", "de"));
+    await waitFor(() => expect(getWeatherByCoords).toHaveBeenCalledWith(10, 20, { units: "metric", lang: "de" }));
     // …and the static UI switches language immediately.
     expect(screen.getByPlaceholderText("Stadt suchen…")).toBeInTheDocument();
   });

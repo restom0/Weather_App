@@ -29,8 +29,9 @@ pnpm-debug.log*
 # SonarQube / SonarCloud scanner working directory
 .scannerwork/
 
-# Tool caches
+# Tool caches / local indexes
 .eslintcache
+.codegraph/
 
 # OS & editor cruft
 .DS_Store

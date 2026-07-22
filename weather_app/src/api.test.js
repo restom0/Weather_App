@@ -14,7 +14,7 @@ describe("api client", () => {
     const fetchMock = vi.fn().mockResolvedValue(okJson({ name: "London" }));
     vi.stubGlobal("fetch", fetchMock);
 
-    const data = await getWeatherByCoords(51.5, -0.12, "metric");
+    const data = await getWeatherByCoords(51.5, -0.12, { units: "metric" });
     expect(data).toEqual({ name: "London" });
 
     const url = new URL(fetchMock.mock.calls[0][0]);
@@ -38,7 +38,7 @@ describe("api client", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     // `units: ""` must be dropped rather than sent as an empty value.
-    await getWeatherByQuery("London", "");
+    await getWeatherByQuery("London", { units: "" });
     const url = new URL(fetchMock.mock.calls[0][0]);
     expect(url.searchParams.has("units")).toBe(false);
     expect(url.searchParams.get("q")).toBe("London");
@@ -48,7 +48,7 @@ describe("api client", () => {
     const fetchMock = vi.fn().mockResolvedValue(okJson({ name: "Tokyo" }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await getWeatherByQuery("Tokyo", "imperial");
+    await getWeatherByQuery("Tokyo", { units: "imperial" });
     const url = new URL(fetchMock.mock.calls[0][0]);
     expect(url.pathname).toBe("/api/weather");
     expect(url.searchParams.get("q")).toBe("Tokyo");
@@ -59,10 +59,10 @@ describe("api client", () => {
     const fetchMock = vi.fn().mockResolvedValue(okJson({}));
     vi.stubGlobal("fetch", fetchMock);
 
-    await getWeatherByCoords(1, 2, "metric", "vi");
+    await getWeatherByCoords(1, 2, { units: "metric", lang: "vi" });
     expect(new URL(fetchMock.mock.calls[0][0]).searchParams.get("lang")).toBe("vi");
 
-    await getWeatherByQuery("Paris", "metric", "fr");
+    await getWeatherByQuery("Paris", { units: "metric", lang: "fr" });
     expect(new URL(fetchMock.mock.calls[1][0]).searchParams.get("lang")).toBe("fr");
   });
 

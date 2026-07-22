@@ -3,7 +3,7 @@ import { DEFAULT_LANGUAGE, LANGUAGES, TRANSLATIONS } from "./translations";
 
 export const STORAGE_KEY = "language";
 
-const SUPPORTED = LANGUAGES.map((language) => language.code);
+const SUPPORTED = new Set(LANGUAGES.map((language) => language.code));
 
 const I18nContext = createContext(null);
 
@@ -11,7 +11,7 @@ const I18nContext = createContext(null);
 export function resolveLanguage(value) {
   if (!value) return null;
   const base = String(value).toLowerCase().split("-")[0];
-  return SUPPORTED.includes(base) ? base : null;
+  return SUPPORTED.has(base) ? base : null;
 }
 
 /** A stored preference wins, then the browser's languages, then English. */
