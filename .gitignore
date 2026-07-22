@@ -38,3 +38,12 @@ pnpm-debug.log*
 Thumbs.db
 *.swp
 *.local
+
+# IDE project config (machine-specific, not shared)
+.idea/
+.vscode/
+!.vscode/extensions.json
+
+# Local agent/tool settings
+.claude/settings.local.json
+.agents/
